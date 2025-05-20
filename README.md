@@ -10,7 +10,7 @@
    - Frecuencia (ej., 5.710 GHz).
    - Alturas de antenas (ej., 5 m).
    - Potencia (ej., 1 W), ganancias (ej., 12 dBi), sensibilidad (ej., -107 dBm).
-5. Configura la simulación (ej., 100 muestras, dataset Mapzen).
+5. Configura la simulación- (Visita nuestro manual de usuario, para la configuración).
 6. Haz clic en "Calcular".
 7. Revisa los resultados, como:
    - Distancia: 2.75 km
