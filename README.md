@@ -18,5 +18,6 @@
    - Peor Fresnel: 0.87F1
    - Pérdidas Totales: 123.05 dB
 
+**Manual de Usuario:** Consulta la [guía completa](https://radiolinkcal.vercel.app/) para más detalles.  
 **Requisitos:** Windows 10+.  
 **Soporte:** [support@radiolinkcalc.com](mailto:support@radiolinkcalc.com).
