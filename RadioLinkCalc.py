@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import customtkinter as ctk
 import tkinter as tk
+import webbrowser
 
 # Establecer apariencia CustomTkinter
 ctk.set_appearance_mode("System")
@@ -62,7 +63,7 @@ def calcular_los_line(elevaciones, tx_height, rx_height):
         for i in range(len(elevaciones))
     ]
 
-def calcular_obstruccion_db_knife_edge(h, r):
+def calcular_obstruccion_db(h, r):
     if r == 0:
         return 0
     v = math.sqrt(2) * h / r
@@ -84,9 +85,9 @@ def detectar_peor_fresnel(elevaciones, los_line, distancias, freq_ghz):
             penetracion = los_line[i] - elevacion_terreno
             pct_obstruccion = penetracion / r_fresnel
             h = elevacion_terreno - los_line[i]
-            obstruccion_db = calcular_obstruccion_db_knife_edge(h, r_fresnel)
+            obstruccion_db = calcular_obstruccion_db(h, r_fresnel)
         else:
-            pct_obstruccion = 0
+            pct_obstruccion = 1
             obstruccion_db = 0
         relacion_bordeinf_elevacion = borde_inferior - elevacion_terreno
         peores_puntos.append((i, pct_obstruccion, r_fresnel, centro_fresnel - elevacion_terreno, obstruccion_db, relacion_bordeinf_elevacion, d1, d2))
@@ -230,7 +231,9 @@ class RadioLinkCalculator(ctk.CTk):
         # Parámetros de Simulación
         self.n_puntos = ctk.CTkEntry(self.sim_frame, placeholder_text="Puntos/muestras (e.g., 100)")
         self.n_puntos.pack(fill="x", pady=2)
-        self.dataset = ctk.CTkEntry(self.sim_frame, placeholder_text="Dataset Perfil (e.g., mapzen)")
+        dataset_options = ["mapzen", "nzdem8m", "ned10m", "eudem25m", "aster30m", "srtm30m", "srtm90m", "bkg200m", "etopo1", "gebco2020", "emod2018"]
+        self.dataset = ctk.CTkComboBox(self.sim_frame, values=dataset_options, state="readonly")
+        self.dataset.set("mapzen")  # Set default value
         self.dataset.pack(fill="x", pady=2)
 
     def create_calculate_button(self):
@@ -238,9 +241,11 @@ class RadioLinkCalculator(ctk.CTk):
         self.calculate_button.pack(pady=6)
 
     def create_results_section(self):
+        ctk.CTkLabel(self.output_frame, text="Desarrollado por: Cristian Castro, Andrés Delgado, Universidad de Pamplona", font=("Arial", 12)).pack(anchor="ne", padx=5, pady=5)
+        
         self.results_frame = ctk.CTkFrame(self.output_frame)
         self.results_frame.pack(fill="x", padx=5, pady=5)
-
+        
         ctk.CTkLabel(self.results_frame, text="Resultados", font=("Arial", 14, "bold")).pack(anchor="w")
         self.results_text = ctk.CTkTextbox(self.results_frame, height=200, width=400)
         self.results_text.pack(fill="x", pady=5)
@@ -268,7 +273,12 @@ class RadioLinkCalculator(ctk.CTk):
             canvas_widget.configure(bg="gray")
         self.ax.set_axis_off()  # Ocultar los ejes hasta que se dibuje el gráfico
         self.canvas.draw()
-
+        
+        # Agregar link de acceso "Documentación"
+        doc_label = ctk.CTkLabel(self.plot_frame, text="Documentación: https://radiolinkcal.vercel.app/", font=("Arial", 12), text_color="white", cursor="hand2")
+        doc_label.pack(anchor="se", padx=5, pady=5)
+        doc_label.bind("<Button-1>", lambda e: webbrowser.open("https://radiolinkcal.vercel.app/"))
+        
     def calculate_link(self):
         try:
             # Recuperar y validar entradas
@@ -311,25 +321,18 @@ class RadioLinkCalculator(ctk.CTk):
             # Actualización de resultados
             self.results_text.delete("1.0", "end")
             results = (
-                f"Index Peor Fresnel: {peor_index}\n"
-                f"Radio de Fresnel: {peor_fresnel:.2f} m\n"
-                f"Espacio Libre Fresnel: {peor_clearance:.2f} m\n"
-                f"{'-'*50}\n"
-                f"Frecuencia Promedio: {freq_ghz:.3f} GHz\n"
-                f"Distancia Tx-Obstáculo: {d1:.2f} m\n"
-                f"Distancia Rx-Obstáculo: {d2:.2f} m\n"
-                f"Distancia Total: {d_total/1000:.2f} km\n"
-                f"Peor Fresnel: {peor_pct_obst:.2f}F1\n"
-                f"Azimut: {azimut:.2f}°\n"
-                f"Espacio Libre: {perdidas_espacio_libre:.2f} dB\n"
-                f"Pérdidas Totales: {perdidas_totales:.2f} dB\n"
-                f"Ángulo de Elevación: {angulo_elevacion:.2f}°\n"
-                f"Obstrucción: {obstruccion_db:.3f} dB\n"
-                f"Campo E: {campo_e:.3f} dBμV/m\n"
-                f"Nivel Rx: {nivel_rx_dbm:.3f} dBm\n"
-                f"Nivel Rx: {nivel_rx_uv:.3f} μV\n"
-                f"Rx Relativo: {rx_relative:.2f} dB\n"
-                f"Estadísticas: {estadisticas:.2f} dB"
+                f"Index Peor Fresnel = {peor_index}\n"
+                f"Radio de Fresnel = {peor_fresnel:.3f} m\n"
+                f"Espacio Libre Fresnel = {peor_clearance:.3f} m\n"
+                f"{'-'*135}\n"
+                f"Frecuencia Promedio = {freq_ghz:.3f} GHz    |   Distancia Tx - Obstáculo = {d1:.3f} m\n"
+                f"Distancia Total = {d_total/1000:.3f} km                |   Distancia Rx - Obstaculo = {d2:.3f} m\n"
+                f"Azimut = {azimut:.2f}°                                    |   Espacio Libre = {perdidas_espacio_libre:.3f} dB\n"
+                f"Pérdidas Totales = {perdidas_totales:.2f} dB            |   Ángulo de Elevación = {angulo_elevacion:.3f}°\n"
+                f"Obstrucción = {obstruccion_db:.3f} dB                     |   Campo E = {campo_e:.3f} dBμV/m\n"
+                f"Despeje a = {d1/1000:.3f} Km                          |   Nivel Rx = {nivel_rx_dbm:.3f} dBm\n"
+                f"Nivel Rx = {nivel_rx_uv:.3f} μV                              |   Rx Relativo = {rx_relative:.3f} dB\n"
+                f"Estadísticas = {estadisticas:.2f} dB                         |    Peor Fresnel = {peor_pct_obst:.2f}F1\n"
             )
             self.results_text.insert("end", results)
 
